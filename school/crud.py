@@ -61,7 +61,7 @@ def update_student(
             session.add(student)
             session.commit()
 
-def update_student(student_id: int):
+def delete_student(student_id: int):
     student = get_one_student(student_id)
 
     if student:
