@@ -1,8 +1,9 @@
 from datetime import datetime
-from sqlalchemy import or_, not_, and_
-from .models import Student , Score
-from .db import get_db
-
+import random, string
+from sqlalchemy import Column, Integer, String, Text, Float, Date, DateTime, Boolean, ForeignKey, or_, and_, not_
+from sqlalchemy.orm import relationship, Session, joinedload
+from .db import get_db, Base
+from .models import Student, Score, Certificate
 
 def create_student(first_name: str, last_name: str, birthdate: datetime, bio: str | None = None):
     student = Student(
@@ -115,3 +116,35 @@ def get_student_with_scores():
             })
 
     return result
+
+def generate_certificate_code(length=8):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+with get_db() as session:
+    # Student 1 uchun
+    student1 = session.query(Student).get(1)
+    session.add(Certificate(student_id=student1.student_id,
+                            title="Python Basics",
+                            content="Completed course",
+                            certificate_code=generate_certificate_code(),
+                            is_verified=False,
+                            issued_at=datetime.now()))
+    
+    # Student 2 uchun 1-ci sertifikat
+    student2 = session.query(Student).get(2)
+    session.add(Certificate(student_id=student2.student_id,
+                            title="Python Basics",
+                            content="Completed course",
+                            certificate_code=generate_certificate_code(),
+                            is_verified=False,
+                            issued_at=datetime.now()))
+    
+    # Student 2 uchun 2-ci sertifikat
+    session.add(Certificate(student_id=student2.student_id,
+                            title="Data Analysis",
+                            content="Completed course",
+                            certificate_code=generate_certificate_code(),
+                            is_verified=False,
+                            issued_at=datetime.now()))
+    
+    session.commit()

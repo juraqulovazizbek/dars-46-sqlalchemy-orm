@@ -1,8 +1,8 @@
 from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, 
-    Date, DateTime, Text, Float , 
-    ForeignKey
+    Date, DateTime, Text, Float  , 
+    ForeignKey , Boolean
 )
 
 from sqlalchemy.orm import relationship 
@@ -54,3 +54,19 @@ class Score(Base):
 
     def __repr__(self):
         return f'Score(id={self.score_id}, name="{self.subject}", ball-> {self.ball} student-> {self.student_id} )'
+    
+
+class Certificate(Base):
+    __tablename__ = 'certificates '
+
+    score_id = Column('id', Integer, primary_key=True, nullable=False)
+    title = Column('title' , String(length=32) ,nullable=False)
+    content	 = Column('content	',Text)
+    issued_at = Column('issued_at', DateTime, default=datetime.now, onupdate=datetime.now)
+
+    certificate_code = Column('certificate_code', String(length=64) , unique=True)
+    is_verified = Column('is_verified', Boolean, nullable=False, default=False)
+    
+
+    # Student modeli ichida
+certificates = relationship('Certificate', back_populates='student')

@@ -12,7 +12,8 @@ from school.crud import (
     sorted_students_by_gpa,
     add_scores,
     get_scores , 
-    get_student_with_scores
+    get_student_with_scores,
+    generate_certificate_code
 )
 
 init_db()
@@ -47,9 +48,29 @@ init_db()
 #     print(g.gpa , g.full_name)
 
 
-add_scores(13 , 'math' , 3)
+# add_scores(13 , 'math' , 3)
 
 # for i in get_student_with_scores():
 #     print(i)
 
-print(get_student_with_scores()[12])
+# print(get_student_with_scores()[12])
+
+
+
+
+
+# --- Simple Tests ---
+# 1. Create student test
+print(create_student("Test", "User", date(2000,1,1)))
+
+
+# 2. Get all students test
+print(get_students())
+
+
+# 3. Add score test
+add_scores(1, "Math", 5)
+
+
+# 4. Print student with scores
+print(get_student_with_scores())
