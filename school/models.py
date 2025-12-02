@@ -1,72 +1,55 @@
 from datetime import datetime
 from sqlalchemy import (
-    Column, Integer, String, 
-    Date, DateTime, Text, Float  , 
-    ForeignKey , Boolean
+    Column, String, Boolean, Float, Integer, DateTime, Text, ForeignKey
 )
-
-from sqlalchemy.orm import relationship 
+from sqlalchemy.orm import relationship
 from .db import Base
 
 
 class Student(Base):
     __tablename__ = 'students'
 
-    student_id = Column('id', Integer, primary_key=True, nullable=False)
-    first_name = Column('first_name', String(length=64), nullable=False)
-    last_name = Column('last_name', String(length=64), nullable=False)
-    birthdate = Column('birthdate', Date, nullable=False)
-    gender = Column('gender' , String(32) , nullable=False)
-    bio = Column('bio', Text)
-    gpa = Column('gpa', Float)
+    student_id = Column(Integer, primary_key=True, nullable=False)
+    first_name = Column(String(64), nullable=False)
+    last_name = Column(String(64), nullable=False)
+    birthdate = Column(DateTime, nullable=False)
+    gender = Column(String(20), nullable=False)
+    bio = Column(String(256))
+    gpa = Column(Float, nullable=False)
 
-    scores= relationship('Score' , back_populates='student')
-
-    created_at = Column('created_at', DateTime, default=datetime.now)
-    updated_at = Column('updated_at', DateTime, default=datetime.now, onupdate=datetime.now)
-
+    certificates = relationship(
+        'Certificate',
+        back_populates='student',
+        cascade="all, delete"
+    )
 
     def __str__(self):
-        return f'Student(id={self.student_id}, name="{self.first_name} {self.last_name}")'
+        return f"Student(id={self.student_id}, name={self.first_name} {self.last_name})"
 
     def __repr__(self):
-        return f'Student(id={self.student_id}, name="{self.first_name} {self.last_name}")'
-    
-    @property  #  @property bu metodni atribut qilib beradi va buni tepadan from qilib chaqirish kk emas buladi funk ichida qilinnmedi va bita funk un ishledi pastdagilar uchun emas 
+        return self.__str__()
+
+    @property
     def full_name(self):
-        return f'({self.first_name} {self.last_name}")'
+        return f"{self.first_name} {self.last_name}"
 
-
-class Score(Base):
-    __tablename__ = 'scores'
-
-    score_id = Column('id', Integer, primary_key=True, nullable=False)
-    subject = Column('subject', String(length=64), nullable=False)
-    ball = Column('ball', Float)
-
-
-    student = relationship('Student' , back_populates='scores')
-
-    student_id = Column('student_id', ForeignKey('students.id', ondelete= 'CASCADE'))
-
-    def __str__(self):
-        return f'Score(id={self.score_id}, name="{self.subject}", ball-> {self.ball} student-> {self.student_id} )'
-
-    def __repr__(self):
-        return f'Score(id={self.score_id}, name="{self.subject}", ball-> {self.ball} student-> {self.student_id} )'
-    
 
 class Certificate(Base):
-    __tablename__ = 'certificates '
+    __tablename__ = 'certificates'
 
-    score_id = Column('id', Integer, primary_key=True, nullable=False)
-    title = Column('title' , String(length=32) ,nullable=False)
-    content	 = Column('content	',Text)
-    issued_at = Column('issued_at', DateTime, default=datetime.now, onupdate=datetime.now)
+    id = Column(Integer, primary_key=True, nullable=False)
+    student_id = Column(Integer, ForeignKey("students.student_id", ondelete="CASCADE"))
 
-    certificate_code = Column('certificate_code', String(length=64) , unique=True)
-    is_verified = Column('is_verified', Boolean, nullable=False, default=False)
-    
+    title = Column(String(256), nullable=False)
+    content = Column(Text, nullable=False)
+    issued_at = Column(DateTime, default=datetime.now)
+    certificate_code = Column(String(256), unique=True)
+    is_verified = Column(Boolean, default=False)
 
-    # Student modeli ichida
-certificates = relationship('Certificate', back_populates='student')
+    student = relationship('Student', back_populates='certificates')
+
+    def __str__(self):
+        return f"Certificate(title={self.title}, student_id={self.student_id})"
+
+    def __repr__(self):
+        return f"<Certificate id={self.id}, title='{self.title}', student_id={self.student_id}>"

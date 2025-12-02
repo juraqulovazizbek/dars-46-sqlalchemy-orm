@@ -1,76 +1,66 @@
-from datetime import date
+from datetime import datetime
+from sqlalchemy import DateTime
 from school.create_tables import init_db
+import random 
 from school.crud import (
     create_student,
     get_students,
-    get_one_student,
-    search_students_by_first_name,
-    search_students_by_name,
-    update_student , 
-    filter_students_by_gender ,
-    filter_students_by_gpa, 
-    sorted_students_by_gpa,
-    add_scores,
-    get_scores , 
-    get_student_with_scores,
-    generate_certificate_code
+    get_one_student_by_id,
+    update_student,
+    create_certificate,
+    get_all_certificates,
+    get_unverified_certificates,
+    get_certificates_by_student,
+    get_certificate_by_code,
+    get_last_five_certificates,
 )
+from school.db import get_db
 
 init_db()
 
 
-# create_student('ali', 'valiyev3', date(2005, 9, 3))
+# create_student('ali', 'valiyev3', date(2005, 9, 3), 'male', 'matematik', 4.5)
 
 # students = get_students()
 # print(students)
 
-# s = get_one_student(1)
-# print(s.bio)
 
-# sts = search_students_by_first_name('ali')
-# print(sts)
+# one_student = get_one_student_by_id(2)
+# print(one_student.first_name, one_student.gpa)
 
-# sts = search_students_by_name('vali')
-# print(sts)
-
-# update_student(1, last_name='nimadir')
-
-# females = filter_students_by_gender('Female')
-# for female in females:
-#     print(female.full_name, '->' ,female.gender)
-
-# gpa = filter_students_by_gpa(3, 3.2)
-# for g in gpa:
-#     print(g.gpa , g.full_name)
-
-# gpa = sorted_students_by_gpa('asc')
-# for g in gpa:
-#     print(g.gpa , g.full_name)
-
-
-# add_scores(13 , 'math' , 3)
-
-# for i in get_student_with_scores():
-#     print(i)
-
-# print(get_student_with_scores()[12])
+# update = update_student(2, gpa= 2.22)
 
 
 
+# def generate_certificate_code():
+#     return str(random.randint(10000000, 99999999))
+
+# create_certificate(
+#     student_id=6,
+#     title='Learn Python3',
+#     content='Bu sertifikat Python3 ni mukammal urganganlarga beriladi',
+#     issued_at=datetime.utcnow(),
+#     certificate_code=generate_certificate_code(),
+#     is_verified=True
+# )
 
 
-# --- Simple Tests ---
-# 1. Create student test
-print(create_student("Test", "User", date(2000,1,1)))
+# all_certificates = get_all_certificates()
+# for c in all_certificates:
+#     print(c.certificate_code, c.title, c.is_verified)
 
 
-# 2. Get all students test
-print(get_students())
+# unverified = get_unverified_certificates()
+# for c in unverified:
+#     print(c.certificate_code, c.title, c.is_verified)
 
 
-# 3. Add score test
-add_scores(1, "Math", 5)
+# student_certificates = get_certificates_by_student(1)
+# for c in student_certificates:
+#     print(c.title, c.issued_at)
 
 
-# 4. Print student with scores
-print(get_student_with_scores())
+
+last_five = get_last_five_certificates()
+for c in last_five:
+    print(c.certificate_code, c.title, c.issued_at, f"Student id: {c.student_id}" )

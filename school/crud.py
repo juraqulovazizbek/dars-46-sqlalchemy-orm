@@ -1,16 +1,17 @@
 from datetime import datetime
-import random, string
-from sqlalchemy import Column, Integer, String, Text, Float, Date, DateTime, Boolean, ForeignKey, or_, and_, not_
-from sqlalchemy.orm import relationship, Session, joinedload
-from .db import get_db, Base
-from .models import Student, Score, Certificate
+from sqlalchemy import or_, not_, and_
+from .models import Student, Certificate
+from .db import get_db
 
-def create_student(first_name: str, last_name: str, birthdate: datetime, bio: str | None = None):
+
+def create_student(first_name: str, last_name: str, birthdate: datetime, gender: str, bio: str | None = None, gpa: float | None=None):
     student = Student(
         first_name=first_name,
         last_name=last_name,
         birthdate=birthdate,
-        bio=bio
+        gender = gender,
+        bio=bio,
+        gpa = gpa,
     )
     
     with get_db() as session:
@@ -20,131 +21,76 @@ def create_student(first_name: str, last_name: str, birthdate: datetime, bio: st
 def get_students() -> list[Student]:
     with get_db() as session:
         students = session.query(Student).all()
-    
+
     return students
 
-def get_one_student(student_id: int) -> Student | None:
+def get_one_student_by_id(student_id):
     with get_db() as session:
-        student = session.query(Student).get(student_id)
-    
-    return student
+        students = session.query(Student).get(student_id)
 
-def search_students_by_first_name(first_name: str) -> list[Student]:
-    with get_db() as session:
-        students = session.query(Student).filter(Student.first_name==first_name).all()
-    
-    return students
-
-def search_students_by_name(name: str) -> list[Student]:
-    with get_db() as session:
-        students = session.query(Student).filter(
-            or_(Student.first_name.like(f'%{name}%'), Student.last_name.like(f'%{name}%'))
-        ).all()
-    
     return students
 
 def update_student(
-    student_id: int | None = None,
-    first_name: str | None = None, 
-    last_name: str | None = None, 
-    birthdate: datetime | None = None, 
-    bio: str | None = None
-):
-    student = get_one_student(student_id)
+        student_id: int | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None, 
+        birthdate: datetime | None = None, 
+        gender: str | None = None, 
+        bio: str | None = None, 
+        gpa: float | None=None
+    ):
+    
+    student = get_one_student_by_id(student_id)
 
     if student:
         with get_db() as session:
             student.first_name = first_name if first_name else student.first_name
             student.last_name = last_name if last_name else student.last_name
             student.birthdate = birthdate if birthdate else student.birthdate
+            student.gender = gender if gender else student.gender
             student.bio = bio if bio else student.bio
+            student.gpa = gpa if gpa else student.gpa
 
             session.add(student)
             session.commit()
 
-def delete_student(student_id: int):
-    student = get_one_student(student_id)
 
-    if student:
-        with get_db() as session:
-            session.delete(student)
-            session.commit() # commit bu daqat insert sellect update da ishlatiladi lkn kurishda tekshirishda yo'q faqat nmadir uzgarsa gina 
 
-def filter_students_by_gender(gender:str) -> list[Student]:
+
+def create_certificate(student_id, title, content, issued_at=None, certificate_code=None, is_verified=False):
+    certificate = Certificate(
+        student_id=student_id,
+        title=title,
+        content=content,
+        issued_at=issued_at,
+        certificate_code=certificate_code,
+        is_verified=is_verified
+    )
     with get_db() as session:
-        # result = session.query(Student).filter(Student.gender==gender).all()
-        result = session.query(Student).filter_by(gender=gender).all()          #felter_by da birdaniga yozib ketsa bular ekan vaqtdan yutish uchun bir xil ishledi 
-    return result
-
-def filter_students_by_gpa(min_gpa: float , max_gpa: float) -> list[Student]:
-    with get_db() as session:
-        # result = session.query(Student).filter(Student.gpa >= min_gpa , Student.gpa <= max_gpa).all()
-        result = session.query(Student).filter(Student.gpa.between(min_gpa, max_gpa)).all()  #betmen🤣
-    
-    return result
-
-
-def sorted_students_by_gpa(by: str = 'asc') -> list[Student]: # order_by default buyicha asc olar ekan pastdan terpaga desc esa tepadan 
-    with get_db() as session:
-        if by == 'asc':
-           result = session.query(Student).order_by(Student.gpa.asc()) #pastdan tepaga 
-        else:
-           result = session.query(Student).order_by(Student.gpa.desc()) #tepadan pastga 
-
-    return result
-
-def add_scores(student_id: int , subject: str , ball: float ):
-    with get_db() as session:
-        student: Student = session.query(Student).get(student_id)
-        student.scores.append(Score(subject=subject , ball=ball))
+        session.add(certificate)
         session.commit()
-
-def get_scores(student_id: int) ->list[Score]:
+        
+def get_all_certificates() -> list[Certificate]:
     with get_db() as session:
-        student: Student = session.query(Student).get(student_id)
-        return student.scores
+        certificates = session.query(Certificate).all()
+    return certificates
 
-def get_student_with_scores():
+def get_unverified_certificates() -> list[Certificate]:
     with get_db() as session:
-         students: list[Student] = session.query(Student).all()
+        certificates = session.query(Certificate).filter(Certificate.is_verified == False).all()
+    return certificates
 
-         result= []
-         for student in students:
-            result.append({
-                'student':student.full_name,
-                'total_scores':len(student.scores)
-            })
+def get_certificates_by_student(student_id: int) -> list[Certificate]:
+    with get_db() as session:
+        certificates = session.query(Certificate).filter(Certificate.student_id == student_id).all()
+    return certificates
 
-    return result
+def get_certificate_by_code(certificate_code: str) -> Certificate | None:
+    with get_db() as session:
+        certificate = session.query(Certificate).filter(Certificate.certificate_code == certificate_code).first()
+    return certificate
 
-def generate_certificate_code(length=8):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-
-with get_db() as session:
-    # Student 1 uchun
-    student1 = session.query(Student).get(1)
-    session.add(Certificate(student_id=student1.student_id,
-                            title="Python Basics",
-                            content="Completed course",
-                            certificate_code=generate_certificate_code(),
-                            is_verified=False,
-                            issued_at=datetime.now()))
-    
-    # Student 2 uchun 1-ci sertifikat
-    student2 = session.query(Student).get(2)
-    session.add(Certificate(student_id=student2.student_id,
-                            title="Python Basics",
-                            content="Completed course",
-                            certificate_code=generate_certificate_code(),
-                            is_verified=False,
-                            issued_at=datetime.now()))
-    
-    # Student 2 uchun 2-ci sertifikat
-    session.add(Certificate(student_id=student2.student_id,
-                            title="Data Analysis",
-                            content="Completed course",
-                            certificate_code=generate_certificate_code(),
-                            is_verified=False,
-                            issued_at=datetime.now()))
-    
-    session.commit()
+def get_last_five_certificates() -> list[Certificate]:
+    with get_db() as session:
+        certificates = session.query(Certificate).order_by(Certificate.issued_at.desc()).all()
+    return certificates[:5]
